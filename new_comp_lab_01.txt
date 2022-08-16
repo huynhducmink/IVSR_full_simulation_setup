@@ -1,0 +1,166 @@
+Table of content:
+1. Instruction to install
+2. Instruction to edit ~/.bashrc
+3. Instruction to run full simulation
+4. Instruction to config each package
+
+Any problem please contact Huynh Duc Minh
+
+--------------------------------------------------------------------------
+
+1. Instruction to install a full UAV navigation simulation system
+Include:
+- PX4
+- Flightmare
+- VIO utilities
+- VINS-Fusion
+- Ewok optimization
+- PD velocity controller
+
+# Ubuntu: 
+Ubuntu 20.04
+
+#ROS: Noetic
+http://wiki.ros.org/noetic/Installation/Ubuntu
+
+#Every package can be installed in the same workspace except PX4, sample file management below
+sample_folder/flightmare_ws/src/
+sample_folder/PX4-Autopilot/
+
+#PX4 
+Install PX4
+	https://docs.px4.io/main/en/dev_setup/building_px4.html
+remember to use make px4_sitl gazebo
+
+Script for setup all dependencies (use with precaution as it is meant to be used for ROS Melodic)(fix dependencies by hand would be better, contact Minh to help and please document if possible, tks)
+	https://docs.px4.io/main/en/dev_setup/dev_env_linux_ubuntu.html
+	bash ./PX4-Autopilot/Tools/setup/ubuntu.sh --no-nuttx --no-sim-tools
+
+QGroundControl
+	start PX4 (roslaunch px4 mavros_posix_sitl.launch)
+	open QGroundControl.AppImage (if cannot run open properties/Permissions/Allow executing file as program)
+	Click on Q symbol on top left corner
+	Choose Vehicle setup
+	Choose Parameters
+	Find COM_RCL_EXCEPT and set to 4 (offboard mode)
+
+#Flightmare
+Follow the instruction to install Flightmare
+	https://flightmare.readthedocs.io/en/latest/getting_started/quick_start.html#quick-start
+
+protoc 3.6.1 is fine on Ubuntu 20.04, no need for version 3.0.0 like the instruction said
+
+After finish installing Flightmare, replace the contents in the flightros folder with the contents in the repo
+	https://github.com/huynhducmink/flightros_for_PX4-Gazebo.git
+
+#Odometry
+Eigen and Ceres-solver dont need to be install to ros workspace, download to ~/Downloads and follow the instruction, both will be installed to root
+
+Eigen 3.4.0 (https://eigen.tuxfamily.org/index.php?title=Main_Page)
+	Instruction to install Eigen is in the INSTALL file included in the download package
+
+ceres-solver 2.1.0 (http://ceres-solver.org/installation.html)
+	As ceres-solver 2.1.0 require fully C++17 compliant compiler, any ROS package that report ceres related error can be fix by changing all C++ standard in the CMakeList.txt of that package to C++17
+
+VINS-Fusion (https://github.com/huynhducmink/VINS-Fusion)
+
+#Planning
+sudo apt install ros-noetic-sophus
+https://github.com/huynhducmink/ewok_optimization_DN.git
+
+#Control
+https://github.com/huynhducmink/offboard
+
+#VIO utilities
+https://github.com/huynhducmink/Visual_odometry_utilities
+
+-------------------------------------------------------------------------
+
+2. Edit ~/.bashrc
+after catkin build successfully, add the following lines to ~/.bashrc (ORDER IS IMPORTANT), then fix all to correct path
+
+source /opt/ros/noetic/setup.bash
+source /home/huynhmink/ROS_workspaces/flightmare_ws/devel/setup.bash
+export FLIGHTMARE_PATH=~/flightmare_ws/src/flightmare
+
+source /home/huynhmink/ROS_workspaces/PX4-Autopilot/Tools/setup_gazebo.bash /home/huynhmink/ROS_workspaces/PX4-Autopilot /home/huynhmink/ROS_workspaces/PX4-Autopilot/build/px4_sitl_default
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/huynhmink/ROS_workspaces/PX4-Autopilot
+export ROS_PACKAGE_PATH=$ROS_PACKAGE_PATH:/home/huynhmink/ROS_workspaces/PX4-Autopilot/Tools/sitl_gazebo
+export GAZEBO_PLUGIN_PATH=$GAZEBO_PLUGIN_PATH:/usr/lib/x86_64-linux-gnu/gazebo-11/plugins
+
+-------------------------------------------------------------------------
+
+3. Instruction to run full simulation
+
+roslaunch px4 mavros_posix_sitl.launch
+
+rosrun read_topic vio_transform
+choose option 1
+
+roslaunch flightros rotors_gazebo.launch
+
+rosrun vins vins_node ~/ROS_workspaces/flightmare_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml
+edit the path to correct path
+
+roslaunch msf_updates viconpos_sensor.launch
+
+roslaunch ewok_optimization optimization_point.launch
+
+roslaunch offboard planner.launch simulation:=true
+
+------------------------------------------------------------------------
+
+4. Instruction to config each package
+
+# msf
+file launch in ethzasl_msf/msf_updates/launch/viconpos_sensor.launch show the remap for the pose input and imu input of the multi sensor fusion package
+/vio_odo_posestamped is output of odometry package change to posestamped format by VIO_utilities package
+
+
+# ewok optimization
+file ewok_optimization/launch/optimization_point.launch have preset trajectory
+if change trajectory also need to change number_of_target
+
+file ewok_optimization/example/spline_optimization_example3.cpp
+- fx,fy,cx,cy depend on output image from Flightmare
+- custom transform from /map to /base_link is created here
+	transform from /world to /map is in launch file
+	transform from /base_link to /camera_link is set in flightmare (as it output image)
+	to create a full tf tree from world to map to base_link to /camera_link to transform esdf map from /camera_link back to /world
+- depth_image_sub_ sub to /depth topic from flightmare
+- current_pose_sub sub to current pose to check for position of the drone to start output planning point. currently set to /msf_core/pose_after_update, set to /vio_odo_posestamped if you dont run msf
+- to run without odometry
+	set current_pose_sub to /mavros/local_position/pose
+	comment custom transform from /map to base_link
+	change /opt/ros/noetic/share/mavros/launch/px4_config.yaml line 71 from false to true to publish transform from /map to /base_link using px4
+
+# Flightmare
+file flightros/src/pilot/flight_pilot.cpp
+- B_r_BC and B_r_BC2 set position of stereo camera (cam 1 double as depth camera)
+- set POV, Width and Height of output image
+- sub_state_est_ sub to /mavros/local_position/pose and each received pose render 2 RGB and 1 Depth image
+- depth image have frame_id as /camera_link to use with ewok
+
+# Offboard
+
+planner.launch
+have start and endpoint of trajectory set in planner, start and endpoint must be different otherwise the controller will detect start point is same is endpoint and land imediately
+change PID_kp to change accelleration to max speed (set in offboard_lib.cpp)
+
+offboard_lib.cpp
+odom_sub_ to current pose, currently sub to /msf_core/odometry (output of msf), change to /mavros/local_position/odom to fly using groundtruth or /vio_odo to fly using output of odometry
+important function is the cal_vel function that calculate velocity from input setpoint and current position
+
+# VINS-FUSION
+file config/euroc/euroc_stereo_imu_config.yaml is used when running the package
+config parameter have explaination comment from author
+file euroc_stereo_imu_config.yaml, cam0_pinhole.yaml and cam1_pinhole.yaml need to match the image resolution
+
+# VIO_utilities
+take groundtruth and publish different ros message formats
+transform output of visual odometry from /vio_frame to /world frame and publish in diffrent formats
+
+
+
+
+
