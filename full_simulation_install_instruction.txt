@@ -50,11 +50,13 @@ Follow the instruction to install Flightmare
 
 protoc 3.6.1 is fine on Ubuntu 20.04, no need for version 3.0.0 like the instruction said
 
-After finish installing Flightmare, replace the contents in the flightros folder with the contents in the repo
-	https://github.com/huynhducmink/flightros_for_PX4-Gazebo.git
+After finish installing Flightmare, replace the contents in the flightros folder with the contents in the repo (this folder have added camera, connect with PX4+Gazebo, some other small thing ...)
+https://github.com/huynhducmink/flightros_for_PX4-Gazebo.git
 
 #Odometry
 Eigen and Ceres-solver dont need to be install to ros workspace, download to ~/Downloads and follow the instruction, both will be installed to root
+
+INSTALL EIGEN BEFORE INSTALL CERES !!!
 
 Eigen 3.4.0 (https://eigen.tuxfamily.org/index.php?title=Main_Page)
 	Instruction to install Eigen is in the INSTALL file included in the download package
@@ -62,14 +64,17 @@ Eigen 3.4.0 (https://eigen.tuxfamily.org/index.php?title=Main_Page)
 ceres-solver 2.1.0 (http://ceres-solver.org/installation.html)
 	As ceres-solver 2.1.0 require fully C++17 compliant compiler, any ROS package that report ceres related error can be fix by changing all C++ standard in the CMakeList.txt of that package to C++17
 
-VINS-Fusion (https://github.com/huynhducmink/VINS-Fusion)
+VINS-Fusion
+git clone https://github.com/huynhducmink/VINS-Fusion
 
 #Planning
 sudo apt install ros-noetic-sophus
-https://github.com/huynhducmink/ewok_optimization_DN.git
+git clone https://github.com/huynhducmink/ewok_optimization_DN.git
 
 #Control
-https://github.com/huynhducmink/offboard
+catkin config --cmake-args -DCMAKE_BUILD_TYPE=Release
+git clone https://github.com/ethz-asl/mav_trajectory_generation.git
+git clone https://github.com/huynhducmink/offboard
 
 #VIO utilities
 https://github.com/huynhducmink/Visual_odometry_utilities
@@ -107,6 +112,7 @@ roslaunch msf_updates viconpos_sensor.launch
 roslaunch ewok_optimization optimization_point.launch
 
 roslaunch offboard planner.launch simulation:=true
+choose 2 then 3 to enter planner flight mode
 
 ------------------------------------------------------------------------
 
