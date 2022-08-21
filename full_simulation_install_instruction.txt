@@ -62,6 +62,7 @@ Eigen 3.4.0 (https://eigen.tuxfamily.org/index.php?title=Main_Page)
 	Instruction to install Eigen is in the INSTALL file included in the download package
 
 ceres-solver 2.1.0 (http://ceres-solver.org/installation.html)
+don't install eigen dependency of ceres (sudo apt-get install libeigen3-dev), use eigen 3.4.0 above
 	As ceres-solver 2.1.0 require fully C++17 compliant compiler, any ROS package that report ceres related error can be fix by changing all C++ standard in the CMakeList.txt of that package to C++17
 
 VINS-Fusion
@@ -69,6 +70,7 @@ git clone https://github.com/huynhducmink/VINS-Fusion
 
 #Planning
 sudo apt install ros-noetic-sophus
+sudo apt-get install git python python3-matplotlib python3-numpy libeigen3-dev libgoogle-glog-dev libatlas-base-dev libsuitesparse-dev protobuf-compiler libnlopt-dev libnlopt-cxx-dev ros-noetic-octomap ros-noetic-octomap-ros ros-noetic-octomap-msgs ros-noetic-tf-conversions ros-noetic-eigen-conversions
 git clone https://github.com/huynhducmink/ewok_optimization_DN.git
 
 #Control
