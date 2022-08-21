@@ -81,6 +81,9 @@ git clone https://github.com/huynhducmink/offboard
 #VIO utilities
 https://github.com/huynhducmink/Visual_odometry_utilities
 
+#MSF
+https://github.com/huynhducmink/ethzasl_msf
+
 -------------------------------------------------------------------------
 
 2. Edit ~/.bashrc
