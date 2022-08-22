@@ -109,8 +109,7 @@ choose option 1
 
 roslaunch flightros rotors_gazebo.launch
 
-rosrun vins vins_node ~/ROS_workspaces/flightmare_ws/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml
-edit the path to correct path
+rosrun vins vins_node $FLIGHTMARE_WS_PATH/src/VINS-Fusion/config/euroc/euroc_stereo_imu_config.yaml
 
 roslaunch msf_updates viconpos_sensor.launch
 
