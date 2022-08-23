@@ -82,6 +82,18 @@ https://github.com/huynhducmink/Visual_odometry_utilities
 -------------------------------------------------------------------------
 
 2. Edit ~/.bashrc
+catkin build
+(Errors may occur):
+	1. Fatal error: nlopt.hpp: no such file or directory 
+	=> Fix: sudo apt install libnlopt-cxx-dev
+	2. Could not find a package configuration file provided by "eigen_checks"/"nlopt"/"glog_catkin"
+	=> Fix: 
+		+ cd catkin_ws/src
+		+ wstool init
+		+ wstool set eigen_checks https://github.com/ethz-asl/eigen_checks --git
+		+ wstool update eigen_checks
+		(do the same with the others, you don't need to wstool init many times)
+	
 after catkin build successfully, add the following lines to ~/.bashrc (ORDER IS IMPORTANT), then fix all to correct path
 
 source /opt/ros/noetic/setup.bash
